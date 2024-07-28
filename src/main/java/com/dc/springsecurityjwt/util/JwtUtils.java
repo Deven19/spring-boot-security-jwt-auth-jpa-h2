@@ -4,13 +4,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
-import java.util.Date;
+import java.util.*;
 import java.util.function.Function;
 
 @Component
@@ -24,8 +24,23 @@ public class JwtUtils {
     private String jwtSecret;
 
     public String generateToken(UserDetails userDetails){
+
+        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("authorities", authorities.stream().map(GrantedAuthority::getAuthority).toList());
+
+        // Validate and sanitize audience if provided (optional)
+     /*   String audience = userDetails.getA *//* Replace 'ge' with actual method *//*;
+        if (audience != null && !audience.isEmpty()) {
+            audience = sanitizeAudience(audience); // Implement custom logic to sanitize audience (if needed)
+        }
+*/
+
+        System.out.println(userDetails.getUsername());
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
+                .setClaims(claims)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + jwtExpirationMsl))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)

@@ -24,7 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 
-    private final JwtUtils jwtUtil;
+    private JwtUtils jwtUtil;
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
@@ -51,29 +51,21 @@ public class SecurityConfig {
     }
     @Bean
     public JwtFilter jwtAuthenticationFilter() {
-        return new JwtFilter(jwtUtil, userDetailsService);
+        return new JwtFilter();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(requests -> requests
+       httpSecurity.csrf(AbstractHttpConfigurer::disable)
+               .authorizeHttpRequests(requests -> requests
+                    .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/public/**").hasRole("PUBLIC")
+                    .anyRequest().authenticated())
+               .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+               .logout(logout -> logout.permitAll());
+       httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
-                    .requestMatchers("/login", "/register").permitAll()
-                    .anyRequest().authenticated()
-                    //.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-                        /*.requestMatchers("/auth/**").permitAll()
-                        //.requestMatchers("/admin/**").hasRole("ADMIN_ROLE")
-                        //.requestMatchers("/public/**").hasRole("PUBLIC")
-                        .anyRequest().authenticated()*/
-                    )
-
-                   // .formLogin(form-> form.loginPage("/auth/login").permitAll())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                    .logout(logout -> logout.permitAll());
-        httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        return httpSecurity.build();
+       return httpSecurity.build();
     }
 }

@@ -32,7 +32,7 @@ public class SpringSecurityJwtApplication {
     @PostConstruct
     public void intUsers(){
         Role roleAdmin = new Role();
-        roleAdmin.setName(RoleName.ROLE_ADMIN);
+        roleAdmin.setName(RoleName.ADMIN);
         roleRepository.save(roleAdmin);
 
         Role rolePublic = new Role();
